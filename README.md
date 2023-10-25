@@ -10,5 +10,5 @@ Developed By Master Hery & Designed by MrAlesio.
 2- Find directory and run the .html file using url.
 
 # Contact me
-[My Website](https://alesio.rf.gd)<br />
-[My Blog](https://mralesio.blogspot.com)
+🌐[My Website](https://alesio.rf.gd)<br />
+🅱️[My Blog](https://mralesio.blogspot.com)
