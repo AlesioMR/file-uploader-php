@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>PHP - Stream Upload Large File</title>
+    <meta charset="UTF-8" />
+    <style>
+        body,
+        html {
+            height: 100%;
+            margin: 0;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        .bg-image {
+            /* The image used */
+            background-image: url("https://images3.alphacoders.com/132/1322308.jpeg");
+
+            /* Full height */
+            height: 100%;
+
+            /* Center and scale the image nicely */
+            background-position: center;
+            background-repeat: no-repeat;
+            background-size: cover;
+        }
+
+        /* Position text in the middle of the page/image */
+        .bg-text {
+            /* Fallback color */
+            background-color: rgba(0, 0, 0, 0.4);
+            /* Black w/opacity/see-through */
+            color: white;
+            font-weight: bold;
+            border: 3px solid #ffffff8c;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 2;
+            width: 80%;
+            padding: 20px;
+            text-align: center;
+            backdrop-filter: blur(5px);
+            border-radius: 100px;
+            box-shadow: 0px 0px 40px 40px #efefef57;
+        }
+
+
+        /* Button */
+        .button-85 {
+            padding: 0.6em 2em;
+            border: none;
+            outline: none;
+            color: rgb(255, 255, 255);
+            background: #111;
+            cursor: pointer;
+            position: relative;
+            z-index: 0;
+            border-radius: 10px;
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: manipulation;
+        }
+
+        .button-85:before {
+            content: "";
+            background: linear-gradient(45deg,
+                    #ff0000,
+                    #ff7300,
+                    #fffb00,
+                    #48ff00,
+                    #00ffd5,
+                    #002bff,
+                    #7a00ff,
+                    #ff00c8,
+                    #ff0000);
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            background-size: 400%;
+            z-index: -1;
+            filter: blur(5px);
+            -webkit-filter: blur(5px);
+            width: calc(100% + 4px);
+            height: calc(100% + 4px);
+            animation: glowing-button-85 20s linear infinite;
+            transition: opacity 0.3s ease-in-out;
+            border-radius: 10px;
+        }
+
+        @keyframes glowing-button-85 {
+            0% {
+                background-position: 0 0;
+            }
+
+            50% {
+                background-position: 400% 0;
+            }
+
+            100% {
+                background-position: 0 0;
+            }
+        }
+
+        .button-85:after {
+            z-index: -1;
+            content: "";
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: #222;
+            left: 0;
+            top: 0;
+            border-radius: 10px;
+        }
+    </style>
+    <script>
+        /********************************************************************
+         * H-JS Stream Upload Large File									*
+         * Developed By Master Hery	& Designed by MrAlesio					*
+         * Updated April 2023												*
+         *																	*
+         * This small function implements FileReader API and send to		*
+         * Server via XMLHttpRequest API.									*
+         *																	*
+         * This code has been developed firstly in 2016, but have been		*
+         * altered in 2018 for improvement and avoid deprecation.			*
+         *																	*
+         * First developed were using FileReader.ReadAsBinaryString.		*
+         * This design patent were good but not work in Mozilla if			*
+         * the file larger than 200MB.										*
+         *																	*
+         * This alteration are using FileReader.ReadAsArrayBuffer and		*
+         * now accept to uplod files up to more than 1GB and has been		*
+         * tested on PHP server will maximum execution time to 60			*
+         * minutes.															*
+         *																	*
+         * ******************************************************************/
+
+        function upload(fileInputId, fileIndex) {
+            var file = document.getElementById(fileInputId).files[fileIndex];
+            var blob;
+            var reader = new FileReader();
+            reader.readAsArrayBuffer(file);
+            reader.onloadend = function (evt) {
+                xhr = new XMLHttpRequest();
+                xhr.open("POST", "wb.php?name=" + file.name, true);
+
+                XMLHttpRequest.prototype.mySendAsBinary = function (text) {
+                    var ui8a = new Uint8Array(new Int8Array(text));
+                    if (typeof window.Blob == "function") {
+                        blob = new Blob([ui8a]);
+                    } else {
+                        var bb = new (window.MozBlobBuilder || window.WebKitBlobBuilder || window.BlobBuilder)();
+                        bb.append(ui8a);
+                        blob = bb.getBlob();
+                    }
+
+                    this.send(blob);
+                }
+
+                var eventSource = xhr.upload || xhr;
+                eventSource.addEventListener("progress", function (e) {
+                    var position = e.position || e.loaded;
+                    var total = e.totalSize || e.total;
+                    var percentage = Math.round((position / total) * 100);
+                });
+
+                xhr.onreadystatechange = function () {
+                    if (this.readyState == 4 && this.status == 200) {
+                        //Finish upload goes here
+                        console.log("Upload done!");
+                        document.getElementById("data").innerHTML = `
+                                <h1>
+                                    File(s) uploaded successfully!
+                                   
+                                </h1><br>
+                                <h1> !Refresh the page to upload again! </h1>
+                               
+                            `;
+                    }
+                };
+
+                xhr.mySendAsBinary(evt.target.result);
+            };
+
+        }
+
+        function pre_upload() {
+            var inp = document.getElementById('attach');
+            for (var i = 0; i < inp.files.length; ++i) {
+                upload("attach", i);
+            }
+        }
+    </script>
+</head>
+
+<body>
+
+    <div class="bg-image"></div>
+
+    <div class="bg-text">
+        <h2>File Uploader</h2>
+        <h1 style="font-size:50px">Result Will Be Here. Try to upload something in form below:</h1>
+        <h2>Upload your file</h2>
+        <input type="file" class="button-85" role="button" id="attach" />
+        <br>
+        <br>
+
+        <button onclick="pre_upload()" class="button-85" id="aleral" role="button">Stream Upload</button>
+        <div id="data"></div>
+        <br>
+    </div>
+
+
+    </div>
+
+    <div
+        style="position: absolute; bottom: 2%; right: 0%; background: rgb(255, 0, 0); color: rgb(255, 255, 255); padding: 10px; font-family: arial;">
+        Design by <a href="https://mralesio.blogspot.com/"><span style="color: rgb(0, 0, 0);">MrAlesio</span></a>
+    </div>
+</body>
+<script>
+    document.getElementById("aleral").addEventListener("click", function () {
+        // Show an alert
+        alert("Don't close this page until upload finished");
+
+        // Continue with your process here
+        alert("You will see a success message at the end");
+    });
+</script>
+
+</html>
